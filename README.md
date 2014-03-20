@@ -4,7 +4,7 @@ Forked from gabrielecirulli's 2048.
 
 Texts below have not been changed from the original version......Maybe I'm too lazy......
 
-    By Milrivel
+——By Milrivel
 
 Play it here : http://milrivel.github.io/LHC/
 
