@@ -1,16 +1,21 @@
 function GameManager(size, InputManager, Actuator, ScoreManager) {
   this.size         = size; // Size of the grid
-  this.inputManager = new InputManager;
-  this.scoreManager = new ScoreManager;
-  this.actuator     = new Actuator;
+  if (typeof(InputManager) !== 'undefined' && InputManager !== null){
+    this.inputManager = new InputManager;
+    this.inputManager.on("move", this.move.bind(this));
+    this.inputManager.on("restart", this.restart.bind(this));
+    this.inputManager.on("keepPlaying", this.keepPlaying.bind(this));
+    this.inputManager.gameManager = this;
+  }
+  if (typeof(ScoreManager) !== 'undefined' && ScoreManager !== null)
+    this.scoreManager = new ScoreManager;
+  if (typeof(Actuator) !== 'undefined' && Actuator !== null)
+    this.actuator     = new Actuator;
 
   this.startTiles   = 2;
 
-  this.inputManager.on("move", this.move.bind(this));
-  this.inputManager.on("restart", this.restart.bind(this));
-  this.inputManager.on("keepPlaying", this.keepPlaying.bind(this));
-
-  this.setup();
+  if (this.actuator)
+    this.setup();
 }
 
 // Restart the game
@@ -68,6 +73,7 @@ GameManager.prototype.addRandomTile = function () {
 
 // Sends the updated grid to the actuator
 GameManager.prototype.actuate = function () {
+  if (!this.scoreManager) return;
   if (this.scoreManager.get() < this.score) {
     this.scoreManager.set(this.score);
   }
@@ -238,6 +244,33 @@ GameManager.prototype.tileMatchesAvailable = function () {
   }
 
   return false;
+};
+
+GameManager.prototype.tileMatchesAvailableCount = function () {
+  var self = this;
+  var count = 0;
+  var tile;
+
+  for (var x = 0; x < this.size; x++) {
+    for (var y = 0; y < this.size; y++) {
+      tile = this.grid.cellContent({ x: x, y: y });
+
+      if (tile) {
+        for (var direction = 0; direction < 4; direction++) {
+          var vector = self.getVector(direction);
+          var cell   = { x: x + vector.x, y: y + vector.y };
+
+          var other  = self.grid.cellContent(cell);
+
+          if (other && other.value === tile.value) {
+            count += tile.value;
+          }
+        }
+      }
+    }
+  }
+
+  return count;
 };
 
 GameManager.prototype.positionsEqual = function (first, second) {
